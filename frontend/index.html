@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoForecast v2 | Time Series Analysis</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>CryptoForecast</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-view="charts">
+                    <i class="fas fa-chart-area"></i> Charts
+                </a>
+                <a href="#" class="nav-item" data-view="forecast">
+                    <i class="fas fa-magic"></i> Predictions
+                </a>
+                <a href="#" class="nav-item" data-view="sentiment">
+                    <i class="fas fa-smile"></i> Sentiment
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="refresh-btn" class="btn-refresh">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="search-container">
+                    <i class="fas fa-chart-line"></i>
+                    <select id="asset-select" class="asset-dropdown">
+                        <option value="BTC-USD">Bitcoin (BTC-USD)</option>
+                        <option value="ETH-USD">Ethereum (ETH-USD)</option>
+                        <option value="SOL-USD">Solana (SOL-USD)</option>
+                        <option value="BNB-USD">Binance Coin (BNB-USD)</option>
+                        <option value="XRP-USD">Ripple (XRP-USD)</option>
+                        <option value="ADA-USD">Cardano (ADA-USD)</option>
+                        <option value="DOGE-USD">Dogecoin (DOGE-USD)</option>
+                        <option value="DOT-USD">Polkadot (DOT-USD)</option>
+                        <option value="MATIC-USD">Polygon (MATIC-USD)</option>
+                        <option value="LINK-USD">Chainlink (LINK-USD)</option>
+                    </select>
+                </div>
+                <div class="user-profile">
+                    <div class="last-refresh">
+                        <i class="fas fa-clock"></i>
+                        <span id="last-refresh-time">--:--:--</span>
+                    </div>
+                    <span class="status-badge">Live</span>
+                    <button class="theme-toggle"><i class="fas fa-moon"></i></button>
+                </div>
+            </header>
+
+            <div id="view-container" class="dashboard-viewport">
+                <!-- Dashboard View -->
+                <div id="view-dashboard" class="view">
+                    <!-- Statistics Row -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon purple"><i class="fas fa-dollar-sign"></i></div>
+                            <div class="stat-info">
+                                <h3>Current Price</h3>
+                                <p id="price-val">$0.00</p>
+                                <span id="price-change-val" class="trend up">+0.00%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green"><i class="fas fa-arrow-up-long"></i></div>
+                            <div class="stat-info">
+                                <h3>52W High</h3>
+                                <p id="high-52w-val">$0.00</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon red"><i class="fas fa-arrow-down-long"></i></div>
+                            <div class="stat-info">
+                                <h3>52W Low</h3>
+                                <p id="low-52w-val">$0.00</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon blue"><i class="fas fa-database"></i></div>
+                            <div class="stat-info">
+                                <h3>Avg Volume</h3>
+                                <p id="volume-val">0.0B</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Charts Section -->
+                    <div class="grid-layout">
+                        <!-- Main Price History -->
+                        <div class="chart-container large">
+                            <div class="chart-header">
+                                <h3 id="analysis-title">Bitcoin (BTC-USD) Price Analysis</h3>
+                                <div class="chart-controls">
+                                    <div class="toggle-group chart-type-toggles" data-target="main">
+                                        <button class="type-btn active" data-type="line">Line</button>
+                                        <button class="type-btn" data-type="candle">Candle</button>
+                                    </div>
+                                    <div class="toggle-group range-toggles">
+                                        <button class="range-btn" data-days="30">1M</button>
+                                        <button class="range-btn active" data-days="90">3M</button>
+                                        <button class="range-btn" data-days="365">1Y</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="mainPriceChart"></div>
+                        </div>
+
+                        <!-- Mini Panels -->
+                        <div class="side-panel">
+                            <div class="model-cards">
+                                <div class="model-stat lstm">
+                                    <span>LSTM Forecast</span>
+                                    <p id="lstm-pred-mini">$0.00</p>
+                                </div>
+                                <div class="model-stat arima">
+                                    <span>ARIMA Forecast</span>
+                                    <p id="arima-pred-mini">$0.00</p>
+                                </div>
+                                <div class="model-stat prophet">
+                                    <span>Prophet Forecast</span>
+                                    <p id="prophet-pred-mini">$0.00</p>
+                                </div>
+                            </div>
+                            <div class="sentiment-widget">
+                                <h3>Quick Sentiment</h3>
+                                <div id="sentimentChartMini"></div>
+                                <div id="sentiment-summary-mini" class="sentiment-badge">Neutral</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts (Technical Analysis) View -->
+                <div id="view-charts" class="view hidden">
+                    <div class="chart-page-layout">
+                        <div class="chart-container main-large">
+                            <div class="chart-header">
+                                <h3 id="technical-analysis-title">Advanced Technical Chart</h3>
+                                <div class="indicator-toggles">
+                                    <div class="toggle-group chart-type-toggles mr-4" data-target="full">
+                                        <button class="type-btn active" data-type="line">Line</button>
+                                        <button class="type-btn" data-type="candle">Candle</button>
+                                    </div>
+                                    <label class="toggle-container">
+                                        <input type="checkbox" class="indicator-toggle" data-indicator="sma_20"> SMA 20
+                                    </label>
+                                    <label class="toggle-container">
+                                        <input type="checkbox" class="indicator-toggle" data-indicator="sma_50"> SMA 50
+                                    </label>
+                                    <label class="toggle-container">
+                                        <input type="checkbox" class="indicator-toggle" data-indicator="bb"> Bollinger
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="canvas-wrapper">
+                                <div id="fullPriceChart"></div>
+                            </div>
+                        </div>
+                        <div class="indicators-grid-alt">
+                            <div class="chart-container">
+                                <h3>RSI Indicator</h3>
+                                <div id="fullRsiChart"></div>
+                            </div>
+                            <div class="chart-container">
+                                <h3>MACD Histogram</h3>
+                                <div id="fullMacdChart"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction (Forecast) View -->
+                <div id="view-forecast" class="view hidden">
+                    <div class="prediction-page-layout">
+                        <!-- New Comparison Section -->
+                        <div class="chart-container x-large mb-4">
+                            <div class="chart-header">
+                                <div class="chart-header-content">
+                                    <h3 id="comparison-header">Combined Model Comparison</h3>
+                                    <p class="header-subtitle">Comparing ARIMA, Prophet, and LSTM with Historical
+                                        Context</p>
+                                </div>
+                                <div class="chart-controls">
+                                    <div class="toggle-group chart-type-toggles" data-target="comparison">
+                                        <button class="type-btn active" data-type="line">Line</button>
+                                        <button class="type-btn" data-type="candle">Candle</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="combinedComparisonChart"></div>
+                        </div>
+
+                        <div class="model-comparison-grid">
+                            <div class="prediction-card">
+                                <div class="card-header arima" id="arima-header">ARIMA Forecast</div>
+                                <div class="prediction-content">
+                                    <div class="pred-price-container">
+                                        <div class="pred-label">30D Forecast Target</div>
+                                        <div class="pred-price" id="arima-pred-main">$0.00</div>
+                                    </div>
+                                    <p class="model-desc">Auto-regressive Integrated Moving Average. Best for short-term
+                                        linear trends based on recent momentum.</p>
+                                    <div id="arimaChart"></div>
+                                </div>
+                            </div>
+                            <div class="prediction-card">
+                                <div class="card-header prophet" id="prophet-header">Prophet Forecast</div>
+                                <div class="prediction-content">
+                                    <div class="pred-price-container">
+                                        <div class="pred-label">30D Forecast Target</div>
+                                        <div class="pred-price" id="prophet-pred-main">$0.00</div>
+                                    </div>
+                                    <p class="model-desc">Facebook Prophet. Handles seasonality and holidays. Best for
+                                        medium-term daily/yearly cycles.</p>
+                                    <div id="prophetChart"></div>
+                                </div>
+                            </div>
+                            <div class="prediction-card">
+                                <div class="card-header lstm" id="lstm-header">LSTM Forecast</div>
+                                <div class="prediction-content">
+                                    <div class="pred-price-container">
+                                        <div class="pred-label">30D Forecast Target</div>
+                                        <div class="pred-price" id="lstm-pred-main">$0.00</div>
+                                    </div>
+                                    <p class="model-desc">Long Short-Term Memory (Neural Network). Deep learning
+                                        approach for capturing complex, non-linear patterns.</p>
+                                    <div id="lstmChart"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sentiment View -->
+                <div id="view-sentiment" class="view hidden">
+                    <div class="sentiment-page-layout">
+                        <div class="sentiment-main">
+                            <div class="chart-container center">
+                                <h3 id="sentiment-dist-title">Overall Sentiment Distribution</h3>
+                                <div id="fullSentimentChart"></div>
+                                <div class="sentiment-meta">
+                                    <div id="sentiment-label-main">Bullish</div>
+                                    <div id="sentiment-score-main">0.45</div>
+                                </div>
+                            </div>
+                            <div class="sentiment-history chart-container">
+                                <h3 id="sentiment-hist-title">Sentiment Score Over Time</h3>
+                                <div id="sentimentHistoryChart"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="overlay">
+        <div class="loader"></div>
+        <p>Crunching time series data...</p>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/charts.js"></script>
+</body>
+
+</html>
