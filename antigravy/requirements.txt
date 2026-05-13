@@ -1,0 +1,13 @@
+flask
+flask-cors
+pandas
+numpy
+yfinance
+statsmodels
+prophet
+tensorflow
+scikit-learn
+matplotlib
+plotly
+sqlalchemy
+python-dotenv
